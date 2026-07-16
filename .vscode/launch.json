@@ -1,0 +1,71 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "SL basic (Inkling)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "tinker_cookbook.recipes.sl_basic",
+      "args": [
+        "model_name=thinkingmachines/Inkling",
+        "log_path=${workspaceFolder}/.runs/sl_basic_inkling"
+      ],
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      }
+    },
+    {
+      "name": "RL basic (Inkling)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "tinker_cookbook.recipes.rl_basic",
+      "args": [
+        "model_name=thinkingmachines/Inkling",
+        "log_path=${workspaceFolder}/.runs/rl_basic_inkling"
+      ],
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      }
+    },
+    {
+      "name": "Code RL (Inkling)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "tinker_cookbook.recipes.code_rl.train",
+      "args": [
+        "model_name=thinkingmachines/Inkling",
+        "group_size=2",
+        "groups_per_batch=2",
+        "lora_rank=32",
+        "log_path=${workspaceFolder}/.runs/code_rl_inkling"
+      ],
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      }
+    },
+    {
+      "name": "Pytest current file",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": ["${file}", "-v"],
+      "console": "integratedTerminal",
+      "justMyCode": false
+    },
+    {
+      "name": "Pytest unit tests",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": ["tinker_cookbook/", "-v", "-m", "not integration and not slow"],
+      "console": "integratedTerminal",
+      "justMyCode": false
+    }
+  ]
+}
