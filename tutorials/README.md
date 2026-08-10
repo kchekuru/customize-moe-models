@@ -22,7 +22,7 @@ The `[tutorials]` extra installs `marimo` (to open the notebooks), `matplotlib` 
 
 ```bash
 git clone https://github.com/thinking-machines-lab/tinker-cookbook.git
-cd tinker-cookbook
+cd tinker_cookbook
 marimo edit tutorials/101_hello_tinker.py
 ```
 

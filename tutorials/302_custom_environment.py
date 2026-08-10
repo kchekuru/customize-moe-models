@@ -21,7 +21,7 @@ def _(mo):
     Now you will implement your own custom task from scratch using those abstractions. The pattern is always the same:
 
     1. **Subclass `ProblemEnv`** -- implement 4 methods that define your task
-    2. **Create an `RLDataset`** -- yields `ProblemGroupBuilder`s that wrap your env
+    2. **Create an `Reinforcement Learning Dataset`** -- yields `ProblemGroupBuilder`s that wrap your env
     3. **Run the standard training loop** -- rollouts, advantages, datums, train
     """)
     return

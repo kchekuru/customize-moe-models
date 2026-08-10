@@ -16,7 +16,7 @@ def _(mo):
     mo.md(r"""
     # Tutorial 102: Your First Supervised Fine-Tuning Run
 
-    In this tutorial, you will fine-tune a language model using supervised learning (SFT). By the end, you will have:
+    In this tutorial, you will fine-tune a language model using supervised learning (Supervised Fine Tuning). By the end, you will have:
 
     1. Built training data from chat messages using a **renderer**
     2. Run `forward_backward` and `optim_step` to update model weights
@@ -58,14 +58,17 @@ def _(mo):
     mo.md(r"""
     ## Create a training client
 
-    We start by creating a `ServiceClient`, then use it to create a LoRA training client. LoRA is a parameter-efficient fine-tuning method -- it trains a small set of adapter weights rather than the full model.
+    We start by creating a `ServiceClient`, then use it to create a Low-Rank Adapter (Low-Rank Adapter) training client. Low-Rank Adapter is a parameter-efficient fine-tuning method -- it trains a small set of adapter weights rather than the full model.
     """)
     return
 
 
 @app.cell
 def _(mo):
-    api_key = mo.ui.text(kind="password", label="Paste your Tinker API key")
+    api_key = mo.ui.text(
+        kind="password",
+        label="tml-F6QCLNAf8C8Ytl41aRCDPEyymNar3gNuKddispPiMXeq0pFq8Wdd3oNjezwWVYOZEAAAA",
+    )
     api_key  # noqa: B018
     return (api_key,)
 
@@ -76,13 +79,14 @@ async def _(api_key, mo, tinker):
 
     mo.stop(
         "TINKER_API_KEY" not in os.environ and not api_key.value,
-        "Paste your API key above",
+        "tml-F6QCLNAf8C8Ytl41aRCDPEyymNar3gNuKddispPiMXeq0pFq8Wdd3oNjezwWVYOZEAAAA",
     )
 
     if api_key.value:
         os.environ["TINKER_API_KEY"] = api_key.value
 
     BASE_MODEL = "Qwen/Qwen3.5-4B"
+    # BASE_MODEL = "GLM/GLM-5.2"
 
     service_client = tinker.ServiceClient()
     training_client = await service_client.create_lora_training_client_async(
@@ -99,7 +103,7 @@ def _(mo):
 
     Supervised fine-tuning teaches a model to produce specific outputs for specific inputs. We need to convert chat-style messages into the token format that Tinker expects.
 
-    The key type is `Datum`, which contains:
+    The key data type is `Datum`, which contains:
     - `model_input`: the token sequence fed into the model
     - `loss_fn_inputs`: target tokens and per-token weights (1 = train on this token, 0 = ignore)
 
@@ -252,7 +256,7 @@ def _(mo):
     ## Train: forward_backward + optim_step
 
     Each training step has two parts:
-    1. **`forward_backward`** -- sends data to the GPU, computes the loss, and calculates gradients
+    1. **`forward_backward`** -- sends data to the Graphical Processing Unit (GPU), computes the loss, and calculates gradients
     2. **`optim_step`** -- applies the gradients to update the model weights (Adam optimizer)
 
     Both calls return futures immediately. We submit both before waiting, so the server can pipeline them. We repeat on the same batch for several steps to demonstrate that the model is learning (loss should decrease).
@@ -331,6 +335,7 @@ async def _(
         "Who are you?",
         "What is Tinker?",
         "How do I save a checkpoint in Tinker?",
+        "Who is Kumar",
         "What is the difference between SFT and RL?",
     ]
     for _question in _test_questions:
@@ -355,7 +360,7 @@ def _(mo):
     mo.md(r"""
     ## Scaling up: fine-tuning Kimi K2.6 with the same code
 
-    Everything we just did on Qwen3.5-4B (4 billion parameters) works identically on much larger models. Let's fine-tune **Kimi K2.6** -- a frontier-class model -- using the exact same training data and loop. With Tinker, you don't need to own the GPUs; you just change the model name.
+    Everything we just did on Qwen3.5-4B (4 billion parameters) works identically on much larger models. Let's fine-tune **Kimi K2.6 from Moonshot AI** -- a frontier-class model -- using the exact same training data and loop. With Tinker, you don't need to own the GPUs; you just change the model name.
     """)
     return
 

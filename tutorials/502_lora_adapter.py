@@ -23,7 +23,7 @@ def _(mo):
     | | Merged model | PEFT adapter |
     |---|---|---|
     | **Size** | Full model (GBs) | Just the LoRA matrices (MBs) |
-    | **Deployment** | Load like any HF model | Load base model + attach adapter |
+    | **Deployment** | Load like any Hugging Face model | Load base model + attach adapter |
     | **Multi-adapter** | One model per adapter | One base + many adapters |
     | **Use with** | Any framework | vLLM `--lora-modules`, SGLang `--lora-paths`, PEFT |
     """)

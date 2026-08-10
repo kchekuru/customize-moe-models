@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.23.8"
+__generated_with = "0.23.16"
 app = marimo.App()
 
 
@@ -61,8 +61,11 @@ def _(mo):
 
 @app.cell
 def _(mo):
-    api_key = mo.ui.text(kind="password", label="Paste your Tinker API key")
-    api_key  # noqa: B018
+    api_key = mo.ui.text(
+        kind="password",
+        label="Paste your Tinker API key",
+        value="tml-F6QCLNAf8C8Ytl41aRCDPEyymNar3gNuKddispPiMXeq0pFq8Wdd3oNjezwWVYOZEAAAA"
+    )
     return (api_key,)
 
 

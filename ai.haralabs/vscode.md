@@ -15,12 +15,22 @@ This repo is set up to open cleanly in VS Code.
    uv venv .venv
    uv pip install -e ".[dev,inkling]" --python .\.venv\Scripts\python.exe
    ```
+   ```bourne again shell
+   uv venv .venv
+   uv pip install -e ".[dev,inkling]" --python .\.venv\bin\python
+   uv pip install -e ".[tutorials,inkling]" 
+   uv pip install -e ".[all,inkling]" 
+
+   ```
 4. Select the interpreter: `Ctrl+Shift+P` → **Python: Select Interpreter** → `.venv\Scripts\python.exe`.
-5. Set your API key (User settings, or a local terminal / `.env` you do not commit):
+5. Set your API key (set key under visual code user settings, or on active terminal prompt / `.env` ):
    ```powershell
    $env:TINKER_API_KEY = "your-key"
    ```
-
+    ```bash
+   export TINKER_API_KEY = "your-key"
+   ```
+  
 ## What is already configured
 
 | File | Purpose |
