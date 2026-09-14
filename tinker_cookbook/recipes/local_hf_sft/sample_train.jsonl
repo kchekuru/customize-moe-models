@@ -1,0 +1,2 @@
+{"messages": [{"role": "user", "content": "Write a python function to compute fibonacci numbers."}, {"role": "assistant", "content": "def fib(n):\n    if n <= 1: return n\n    return fib(n-1) + fib(n-2)"}]}
+{"messages": [{"role": "user", "content": "How do you reverse a string in Python?"}, {"role": "assistant", "content": "Use slice notation: s[::-1]"}]}
