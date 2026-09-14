@@ -3,9 +3,7 @@ name = "tinker_cookbook"
 dynamic = ["version"]
 description = "Implementations of post-training algorithms using the Tinker API"
 readme = "README.md"
-authors = [
-{ name = "Tinker authors", email = "tinker@thinkingmachines.ai" },
-]
+authors = [{ name = "Tinker authors", email = "tinker@thinkingmachines.ai" }]
 license = "Apache-2.0"
 requires-python = ">=3.11"
 dependencies = [
@@ -22,7 +20,7 @@ dependencies = [
     "rich>=13.0.0",
     "safetensors>=0.4.0",
     "termcolor>=2.0.0",
-    "tiktoken>=0.12.0", # Required for Kimi tokenizer
+    "tiktoken>=0.12.0",                                                     # Required for Kimi tokenizer
     "tinker>=0.22.3",
     "torch>=2.0",
     "tqdm>=4.60.0",
@@ -42,31 +40,16 @@ dev = [
     "ruff>=0.4.0",
     "pyright>=1.1.300",
 ]
-audio = [
-    "jiwer>=3.0.0",
-    "soundfile>=0.12.0",
-]
-math-rl = [
-    "math-verify>=0.5.0",
-    "pylatexenc>=2.0",
-    "sympy>=1.12.0",
-]
+audio = ["jiwer>=3.0.0", "soundfile>=0.12.0"]
+math-rl = ["math-verify>=0.5.0", "pylatexenc>=2.0", "sympy>=1.12.0"]
 inkling = [
     "tinker>=0.23.0",
     "tml-renderers>=0.0.1",
-    "torch>=2.10", # tml_renderers uses libtorch's stable C ABI, added in 2.10
+    "torch>=2.10",          # tml_renderers uses libtorch's stable C ABI, added in 2.10
 ]
-modal = [
-    "modal>=1.5.1",
-]
-multiplayer-rl = [
-    "textarena>=0.7.4",
-]
-tutorials = [
-    "marimo>=0.23.8",
-    "matplotlib>=3.7.0",
-    "tinker_cookbook[math-rl]",
-]
+modal = ["modal>=1.5.1"]
+multiplayer-rl = ["textarena>=0.7.4"]
+tutorials = ["marimo>=0.23.8", "matplotlib>=3.7.0", "tinker_cookbook[math-rl]"]
 vector-search = [
     "chromadb>=1.0.0",
     "google-genai>=1.0.0",
@@ -78,45 +61,18 @@ cloud = [
     "s3fs>=2023.1.0",
     "adlfs>=2023.1.0",
 ]
-wandb = [
-    "wandb>=0.16.0",
-    "plotly>=5.0.0",
-]
-neptune-scale = [
-    "neptune-scale>=0.27.0",
-]
-trackio = [
-    "trackio<1.0.0",
-]
-verifiers = [
-    "verifiers>=0.1.9,<0.1.10",
-    "openai>=1.0.0",
-]
-inspect = [
-    "inspect-ai>=0.3.100",
-    "inspect-evals>=0.3.106",
-]
-litellm = [
-    "litellm>=1.80.0,!=1.82.7,!=1.82.8",
-]
-eval-math500 = [
-    "tinker_cookbook[math-rl]",
-]
-eval-hmmt = [
-    "antlr4-python3-runtime>=4.11,<4.14",
-]
-eval-mbpp = [
-    "tinker_cookbook[modal]",
-]
-eval-livecodebench = [
-    "tinker_cookbook[modal]",
-]
-eval-terminal-bench = [
-    "tinker_cookbook[modal]",
-]
-eval-swe-bench = [
-    "tinker_cookbook[modal]",
-]
+wandb = ["wandb>=0.16.0", "plotly>=5.0.0"]
+neptune-scale = ["neptune-scale>=0.27.0"]
+trackio = ["trackio<1.0.0"]
+verifiers = ["verifiers>=0.1.9,<0.1.10", "openai>=1.0.0"]
+inspect = ["inspect-ai>=0.3.100", "inspect-evals>=0.3.106"]
+litellm = ["litellm>=1.80.0,!=1.82.7,!=1.82.8"]
+eval-math500 = ["tinker_cookbook[math-rl]"]
+eval-hmmt = ["antlr4-python3-runtime>=4.11,<4.14"]
+eval-mbpp = ["tinker_cookbook[modal]"]
+eval-livecodebench = ["tinker_cookbook[modal]"]
+eval-terminal-bench = ["tinker_cookbook[modal]"]
+eval-swe-bench = ["tinker_cookbook[modal]"]
 eval-ifbench = [
     # The ifbench package must also be installed separately (not on PyPI):
     #   uv pip install 'ifbench @ git+https://github.com/allenai/IFBench.git'
@@ -175,6 +131,12 @@ markers = [
     "downstream_compat: marks tests that verify public API contracts for downstream consumers",
     "timeout: per-test timeout in seconds (requires pytest-timeout)",
 ]
+filterwarnings = [
+    # Turn unknown warnings into errors is NOT enabled here; we only silence known/expected ones.
+    "ignore:Tool message missing 'name' field.*:UserWarning",
+    "ignore:use_system_prompt=True but messages already start with a system message.*:UserWarning",
+    "ignore:'Function write_rollout_summaries_jsonl' is deprecated.*:DeprecationWarning",
+]
 
 [tool.ruff]
 line-length = 100
@@ -185,14 +147,14 @@ exclude = [
 
 [tool.ruff.lint]
 select = [
-    "E",    # pycodestyle errors
-    "F",    # pyflakes (unused imports, undefined names)
-    "I",    # isort (import sorting)
-    "UP",   # pyupgrade (modernize Python syntax)
-    "B",    # flake8-bugbear (common bugs and design problems)
-    "SIM",  # flake8-simplify (simplifiable code)
-    "RUF",  # Ruff-specific rules
-    "C4",   # flake8-comprehensions (unnecessary comprehensions)
+    "E",   # pycodestyle errors
+    "F",   # pyflakes (unused imports, undefined names)
+    "I",   # isort (import sorting)
+    "UP",  # pyupgrade (modernize Python syntax)
+    "B",   # flake8-bugbear (common bugs and design problems)
+    "SIM", # flake8-simplify (simplifiable code)
+    "RUF", # Ruff-specific rules
+    "C4",  # flake8-comprehensions (unnecessary comprehensions)
 ]
 ignore = [
     "E501",   # line too long (handled by formatter)

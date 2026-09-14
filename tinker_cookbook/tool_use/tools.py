@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import inspect
 import json
 from collections.abc import Callable
@@ -233,7 +232,7 @@ class FunctionTool:
         try:
             kwargs = validated.model_dump()
             args = (self._instance,) if self._instance is not None else ()
-            if asyncio.iscoroutinefunction(self._fn):
+            if inspect.iscoroutinefunction(self._fn):
                 result = await self._fn(*args, **kwargs)
             else:
                 result = self._fn(*args, **kwargs)
