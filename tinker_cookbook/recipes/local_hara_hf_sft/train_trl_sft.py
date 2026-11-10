@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
+from typing import Any, cast
 
 import chz
 import torch
@@ -21,6 +23,41 @@ from tinker_cookbook.supervised.data import TrainOnWhat, conversation_to_datum
 
 IGNORE_INDEX = -100
 
+# Fallback renderer mapping used when TINKER_API_KEY is unavailable and
+# model_info.get_recommended_renderer_name cannot reach the Tinker service.
+_LOCAL_RENDERER_FALLBACKS: dict[str, str] = {
+    "qwen2.5": "qwen3",
+    "qwen1.5-moe": "qwen3",
+    "qwen3": "qwen3",
+    "mixtral": "llama3",
+    "llama-3": "llama3",
+}
+
+
+def resolve_renderer_name(model_id: str) -> str:
+    """Resolve a renderer name; works with or without TINKER_API_KEY.
+
+    Prefers the Tinker-authoritative lookup (convention #4: never hardcode
+    renderer names) when a key is set, falling back to a local offline
+    mapping otherwise.
+    """
+    if os.environ.get("TINKER_API_KEY"):
+        try:
+            return model_info.get_recommended_renderer_name(model_id)
+        except Exception:
+            pass  # fall through to local mapping below
+
+    lowered = model_id.lower()
+    for key, renderer_name in _LOCAL_RENDERER_FALLBACKS.items():
+        if key in lowered:
+            return renderer_name
+
+    raise ValueError(
+        f"No renderer available for model_id={model_id!r}: TINKER_API_KEY is "
+        "not set (or the lookup failed) and no local fallback mapping exists. "
+        "Add an entry to _LOCAL_RENDERER_FALLBACKS, or set TINKER_API_KEY."
+    )
+
 
 @chz.chz
 class LocalHFSFTConfig:
@@ -33,6 +70,7 @@ class LocalHFSFTConfig:
 
     model_id: str = "Qwen/Qwen2.5-0.5B-Instruct"
     train_jsonl_path: str = ""
+    eval_jsonl_path: str = ""
     output_dir: str = "./outputs/local_hf_sft"
     max_length: int = 2048
     train_on_what: TrainOnWhat = TrainOnWhat.ALL_ASSISTANT_MESSAGES
@@ -67,7 +105,9 @@ def conversations_to_hf_dataset(
     max_length: int,
     train_on_what: TrainOnWhat,
 ) -> Dataset:
-    renderer = get_renderer(renderer_name, tokenizer)
+    # get_renderer's `tokenizer` param is typed Any; cast avoids a stub
+    # resolution conflict with an unrelated `tokenizers.Tokenizer` symbol.
+    renderer = get_renderer(renderer_name, cast(Any, tokenizer))
     rows: list[dict[str, list[int]]] = []
 
     for conv in conversations:
@@ -114,9 +154,8 @@ def run(config: LocalHFSFTConfig) -> None:
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
-    # Convention #4: never hardcode renderer names — use the recommended one
-    # for this model family, same as Tinker-backed training would.
-    renderer_name = model_info.get_recommended_renderer_name(config.model_id)
+    # Works with or without TINKER_API_KEY (see resolve_renderer_name).
+    renderer_name = resolve_renderer_name(config.model_id)
 
     conversations = load_conversations_jsonl(config.train_jsonl_path)
     train_dataset = conversations_to_hf_dataset(
@@ -126,6 +165,16 @@ def run(config: LocalHFSFTConfig) -> None:
         max_length=config.max_length,
         train_on_what=config.train_on_what,
     )
+    eval_dataset = None
+    if config.eval_jsonl_path:
+        eval_conversations = load_conversations_jsonl(config.eval_jsonl_path)
+        eval_dataset = conversations_to_hf_dataset(
+            conversations=eval_conversations,
+            tokenizer=tokenizer,
+            renderer_name=renderer_name,
+            max_length=config.max_length,
+            train_on_what=config.train_on_what,
+        )
 
     device_map, torch_dtype = resolve_device_dtype()
     model = AutoModelForCausalLM.from_pretrained(
@@ -151,6 +200,7 @@ def run(config: LocalHFSFTConfig) -> None:
         gradient_accumulation_steps=config.gradient_accumulation_steps,
         learning_rate=config.learning_rate,
         logging_steps=1,
+        eval_strategy="epoch" if eval_dataset is not None else "no",
         save_strategy="no",
         report_to="none",
     )
@@ -159,12 +209,15 @@ def run(config: LocalHFSFTConfig) -> None:
         model=model,
         args=training_args,
         train_dataset=train_dataset,
+        eval_dataset=eval_dataset,
         peft_config=lora_config,
     )
 
     trainer.train()
 
     Path(config.output_dir).mkdir(parents=True, exist_ok=True)
+    with (Path(config.output_dir) / "training_log.json").open("w", encoding="utf-8") as log_file:
+        json.dump(trainer.state.log_history, log_file, indent=2)
     trainer.save_model(config.output_dir)
     tokenizer.save_pretrained(config.output_dir)
 
