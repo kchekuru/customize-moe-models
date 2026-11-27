@@ -58,18 +58,28 @@ Bad dependency versions are a silent killer. Check these first because they're f
 
 ```python
 import sys, pydantic, tinker
+
 print(f"Python: {sys.version}")
 print(f"pydantic: {pydantic.__version__}")
 print(f"tinker SDK: {tinker.__version__}")
 try:
-    import torch; print(f"torch: {torch.__version__}")
-except ImportError: pass
+    import torch
+
+    print(f"torch: {torch.__version__}")
+except ImportError:
+    pass
 try:
-    import numpy; print(f"numpy: {numpy.__version__}")
-except ImportError: pass
+    import numpy
+
+    print(f"numpy: {numpy.__version__}")
+except ImportError:
+    pass
 try:
-    import transformers; print(f"transformers: {transformers.__version__}")
-except ImportError: pass
+    import transformers
+
+    print(f"transformers: {transformers.__version__}")
+except ImportError:
+    pass
 ```
 
 **Known problem versions:**
@@ -116,6 +126,7 @@ If the user is running the cookbook's train scripts, check the `log_path` output
 ```python
 # Read timing metrics from a training run
 import json
+
 with open("path/to/metrics.jsonl") as f:
     metrics = [json.loads(line) for line in f]
 
@@ -236,6 +247,7 @@ This is the most subtle and most common cause of "mysterious" slowdowns. Because
 ```python
 import threading, time
 
+
 def gil_monitor(interval=2.0):
     """Prints when the GIL blocks this thread for too long."""
     expected = interval
@@ -245,8 +257,11 @@ def gil_monitor(interval=2.0):
         actual = time.monotonic() - t0
         jitter = actual - expected
         if jitter > 0.5:  # >500ms jitter = GIL contention
-            print(f"[GIL monitor] slept {actual:.2f}s instead of {expected:.1f}s "
-                  f"(jitter: {jitter:.2f}s) — likely GIL contention")
+            print(
+                f"[GIL monitor] slept {actual:.2f}s instead of {expected:.1f}s "
+                f"(jitter: {jitter:.2f}s) — likely GIL contention"
+            )
+
 
 threading.Thread(target=gil_monitor, daemon=True).start()
 # ... rest of training script ...
@@ -260,6 +275,7 @@ If GIL is not the issue and the client submits quickly, check whether the wait i
 
 ```python
 import time, tinker
+
 svc = tinker.ServiceClient()
 t0 = time.perf_counter()
 caps = svc.get_server_capabilities()
@@ -329,7 +345,7 @@ Even with correct weights, different inference engines may tokenize or render pr
 # Compare token IDs between Tinker and external engine
 # Tinker side:
 model_input = renderer.build_supervised_example(messages)[0]
-tinker_tokens = [chunk.tokens for chunk in model_input.chunks if hasattr(chunk, 'tokens')]
+tinker_tokens = [chunk.tokens for chunk in model_input.chunks if hasattr(chunk, "tokens")]
 
 # External engine side:
 external_tokens = tokenizer.apply_chat_template(messages, tokenize=True)
@@ -496,7 +512,9 @@ else:
     # Find first divergence point
     for i, (a, b) in enumerate(zip(cookbook_tokens, hf_tokens)):
         if a != b:
-            print(f"  First diff at position {i}: cookbook={a} ({tokenizer.decode([a])!r}) vs HF={b} ({tokenizer.decode([b])!r})")
+            print(
+                f"  First diff at position {i}: cookbook={a} ({tokenizer.decode([a])!r}) vs HF={b} ({tokenizer.decode([b])!r})"
+            )
             break
     print(f"  Cookbook length: {len(cookbook_tokens)}, HF length: {len(hf_tokens)}")
 ```

@@ -7,7 +7,15 @@ Complete reference for RL environments, multi-turn training, and core types.
 Envs are **single-use** (no reset). Each env handles one episode.
 
 ```python
-from tinker_cookbook.rl.types import Env, StepResult, Observation, Action, ActionExtra, StopCondition
+from tinker_cookbook.rl.types import (
+    Env,
+    StepResult,
+    Observation,
+    Action,
+    ActionExtra,
+    StopCondition,
+)
+
 
 class MyEnv(Env):
     async def initial_observation(self) -> tuple[Observation, StopCondition]:
@@ -33,6 +41,7 @@ Creates a group of envs for the same prompt. Advantages are centered within each
 
 ```python
 from tinker_cookbook.rl.types import EnvGroupBuilder, Trajectory, Metrics
+
 
 class MyEnvGroupBuilder(EnvGroupBuilder):
     async def make_envs(self) -> Sequence[Env]:
@@ -73,22 +82,31 @@ Handles rendering, reward computation (with format penalty), and logging. You im
 ```python
 from tinker_cookbook.rl.problem_env import ProblemEnv, ProblemGroupBuilder
 
+
 class MyMathEnv(ProblemEnv):
     def __init__(self, question: str, answer: str, **kwargs):
         super().__init__(**kwargs)
         self.question, self.answer = question, answer
 
-    def get_question(self) -> str: return self.question
-    def check_answer(self, sample_str: str) -> bool: return self.answer.lower() in sample_str.lower()
-    def check_format(self, sample_str: str) -> bool: return True
-    def get_reference_answer(self) -> str: return self.answer
+    def get_question(self) -> str:
+        return self.question
+
+    def check_answer(self, sample_str: str) -> bool:
+        return self.answer.lower() in sample_str.lower()
+
+    def check_format(self, sample_str: str) -> bool:
+        return True
+
+    def get_reference_answer(self) -> str:
+        return self.answer
 ```
 
 Wrap with `ProblemGroupBuilder`:
 ```python
 builder = ProblemGroupBuilder(
     env_thunk=lambda: MyMathEnv(question=q, answer=a, renderer=renderer),
-    num_envs=group_size, dataset_name="my_math",
+    num_envs=group_size,
+    dataset_name="my_math",
 )
 ```
 
@@ -100,6 +118,7 @@ For multi-turn environments (tool use, interactive tasks):
 
 ```python
 from tinker_cookbook.rl.message_env import MessageEnv, MessageStepResult, EnvFromMessageEnv
+
 
 class MyToolEnv(MessageEnv):
     async def initial_observation(self) -> list[Message]:
@@ -118,8 +137,10 @@ class MyToolEnv(MessageEnv):
 Bridge to Env:
 ```python
 env = EnvFromMessageEnv(
-    renderer=renderer, message_env=MyToolEnv(),
-    max_trajectory_tokens=8192, failed_parse_reward=-1.0,
+    renderer=renderer,
+    message_env=MyToolEnv(),
+    max_trajectory_tokens=8192,
+    failed_parse_reward=-1.0,
 )
 ```
 
@@ -172,7 +193,10 @@ class CalculatorEnv(MessageEnv):
 
     async def initial_observation(self) -> list[Message]:
         return [
-            {"role": "system", "content": "You can use calc(expr) to evaluate math. Give your final answer as: Answer: <number>"},
+            {
+                "role": "system",
+                "content": "You can use calc(expr) to evaluate math. Give your final answer as: Answer: <number>",
+            },
             {"role": "user", "content": self.question},
         ]
 
@@ -185,7 +209,8 @@ class CalculatorEnv(MessageEnv):
             correct = abs(float(answer_match.group(1)) - self.answer) < 0.01
             return MessageStepResult(
                 reward=1.0 if correct else 0.0,
-                episode_done=True, next_messages=[],
+                episode_done=True,
+                next_messages=[],
                 metrics={"correct": float(correct), "turns": self.turns},
             )
 
@@ -196,7 +221,8 @@ class CalculatorEnv(MessageEnv):
             except Exception:
                 result = "Error: invalid expression"
             return MessageStepResult(
-                reward=0.0, episode_done=False,
+                reward=0.0,
+                episode_done=False,
                 next_messages=[{"role": "user", "content": f"Result: {result}"}],
                 metrics={},
             )
@@ -235,12 +261,16 @@ class CalculatorDataset(RLDataset):
         self.group_size = group_size
         self.renderer_name, self.model_name = renderer_name, model_name
 
-    def __len__(self): return max(1, len(self.problems) // self.batch_size)
+    def __len__(self):
+        return max(1, len(self.problems) // self.batch_size)
 
     def get_batch(self, batch_idx):
         start = (batch_idx * self.batch_size) % len(self.problems)
-        batch = self.problems[start:start + self.batch_size]
-        return [CalculatorEnvGroupBuilder(q, a, self.group_size, self.renderer_name, self.model_name) for q, a in batch]
+        batch = self.problems[start : start + self.batch_size]
+        return [
+            CalculatorEnvGroupBuilder(q, a, self.group_size, self.renderer_name, self.model_name)
+            for q, a in batch
+        ]
 
 
 @chz.chz
@@ -252,7 +282,9 @@ class CalculatorDatasetBuilder(RLDatasetBuilder):
 
     async def __call__(self):
         problems = [("What is 123 * 456?", 56088), ("What is 789 + 321?", 1110)]
-        return CalculatorDataset(problems, self.batch_size, self.group_size, self.renderer_name, self.model_name), None
+        return CalculatorDataset(
+            problems, self.batch_size, self.group_size, self.renderer_name, self.model_name
+        ), None
 
 
 @chz.chz
@@ -271,7 +303,9 @@ class CLIConfig:
 
 async def cli_main(cli_config: CLIConfig):
     renderer_name = model_info.get_recommended_renderer_name(cli_config.model_name)
-    cli_utils.check_log_dir(cli_config.log_path, behavior_if_exists=cli_config.behavior_if_log_dir_exists)
+    cli_utils.check_log_dir(
+        cli_config.log_path, behavior_if_exists=cli_config.behavior_if_log_dir_exists
+    )
     config = Config(
         learning_rate=cli_config.learning_rate,
         dataset_builder=CalculatorDatasetBuilder(
@@ -302,6 +336,7 @@ if __name__ == "__main__":
 **Async rollouts** for expensive environments:
 ```python
 from tinker_cookbook.rl.train import AsyncConfig
+
 config = Config(
     ...,
     async_config=AsyncConfig(max_steps_off_policy=4, groups_per_batch=8),

@@ -48,6 +48,7 @@ Model type fundamentally affects how you train and what to expect.
 **Always resolve the renderer automatically:**
 ```python
 from tinker_cookbook import model_info
+
 renderer_name = model_info.get_recommended_renderer_name(model_name)
 ```
 
@@ -81,7 +82,8 @@ from tinker_cookbook.eval.benchmarks import run_benchmarks, BenchmarkConfig
 # sampling_client from tc.save_weights_and_get_sampling_client()
 results = await run_benchmarks(
     ["gsm8k", "mmlu_pro", "ifeval"],
-    sampling_client, renderer,
+    sampling_client,
+    renderer,
     BenchmarkConfig(save_dir="evals/baseline"),
 )
 for name, result in results.items():
@@ -129,11 +131,21 @@ If your task needs a custom eval, **add it to the benchmark framework** rather t
 
 ```python
 # tinker_cookbook/eval/benchmarks/my_benchmark.py
-from tinker_cookbook.eval.benchmarks._types import BenchmarkBuilder, BenchmarkConfig, BenchmarkResult
-from tinker_cookbook.eval.benchmarks._common import build_messages, make_example_id, limit_dataset, load_benchmark_dataset
+from tinker_cookbook.eval.benchmarks._types import (
+    BenchmarkBuilder,
+    BenchmarkConfig,
+    BenchmarkResult,
+)
+from tinker_cookbook.eval.benchmarks._common import (
+    build_messages,
+    make_example_id,
+    limit_dataset,
+    load_benchmark_dataset,
+)
 from tinker_cookbook.eval.benchmarks import register
 from tinker_cookbook.rl.message_env import MessageEnv, MessageStepResult, EnvFromMessageEnv
 from tinker_cookbook.renderers import get_text_content
+
 
 class MyEnv(MessageEnv):
     def __init__(self, question: str, expected: str, example_id: str = ""):
@@ -146,10 +158,13 @@ class MyEnv(MessageEnv):
         response = get_text_content(message)
         correct = self.expected.lower() in response.lower()
         return MessageStepResult(
-            reward=1.0 if correct else 0.0, episode_done=True, next_messages=[],
+            reward=1.0 if correct else 0.0,
+            episode_done=True,
+            next_messages=[],
             metrics={"correct": float(correct)},
             logs={"expected": self.expected, "output": response[:500]},
         )
+
 
 class MyBenchmarkBuilder(BenchmarkBuilder):
     name = "my_benchmark"
@@ -162,10 +177,12 @@ class MyBenchmarkBuilder(BenchmarkBuilder):
             EnvFromMessageEnv(
                 renderer=renderer,
                 message_env=MyEnv(row["q"], row["a"], make_example_id("my_benchmark", row["q"])),
-                failed_parse_reward=0.0, context_overflow_reward=0.0,
+                failed_parse_reward=0.0,
+                context_overflow_reward=0.0,
             )
             for row in ds
         ]
+
 
 register(MyBenchmarkBuilder())
 ```
@@ -239,6 +256,7 @@ git rev-parse HEAD  # Record this in your notes
 
 ```python
 import pandas as pd
+
 df = pd.read_json("path/to/metrics.jsonl", lines=True)
 df.plot(x="progress/batch", y="env/all/reward/total")
 ```
@@ -274,6 +292,7 @@ cd tinker-cookbook && pip install -e .                 # Cookbook
 
 ```python
 import tinker
+
 svc = tinker.ServiceClient()
 tc = svc.create_lora_training_client(base_model="Qwen/Qwen3.5-9B-Base", rank=32)
 print(tc.get_info())
@@ -309,16 +328,22 @@ renderer_name = model_info.get_recommended_renderer_name(model_name)
 common_config = ChatDatasetBuilderCommonConfig(
     model_name_for_tokenizer=model_name,
     renderer_name=renderer_name,
-    max_length=32768, batch_size=128,
+    max_length=32768,
+    batch_size=128,
     train_on_what=TrainOnWhat.ALL_ASSISTANT_MESSAGES,
 )
 dataset = chat_datasets.NoRobotsBuilder(common_config=common_config)
-blueprint = chz.Blueprint(train.Config).apply({
-    "log_path": "/tmp/tinker-examples/sft",
-    "model_name": model_name, "renderer_name": renderer_name,
-    "dataset_builder": dataset,
-    "learning_rate": 2e-4, "lr_schedule": "linear", "num_epochs": 1,
-})
+blueprint = chz.Blueprint(train.Config).apply(
+    {
+        "log_path": "/tmp/tinker-examples/sft",
+        "model_name": model_name,
+        "renderer_name": renderer_name,
+        "dataset_builder": dataset,
+        "learning_rate": 2e-4,
+        "lr_schedule": "linear",
+        "num_epochs": 1,
+    }
+)
 config = blueprint.make()
 cli_utils.check_log_dir(config.log_path, behavior_if_exists="ask")
 asyncio.run(train.main(config))
@@ -348,16 +373,21 @@ from tinker_cookbook.rl import train
 model_name = "Qwen/Qwen3.5-9B-Base"
 renderer_name = model_info.get_recommended_renderer_name(model_name)
 builder = Gsm8kDatasetBuilder(
-    batch_size=128, group_size=16,
+    batch_size=128,
+    group_size=16,
     renderer_name=renderer_name,
     model_name_for_tokenizer=model_name,
 )
-blueprint = chz.Blueprint(train.Config).apply({
-    "model_name": model_name, "renderer_name": renderer_name,
-    "log_path": "/tmp/tinker-examples/rl",
-    "dataset_builder": builder,
-    "learning_rate": 4e-5, "max_tokens": 256,
-})
+blueprint = chz.Blueprint(train.Config).apply(
+    {
+        "model_name": model_name,
+        "renderer_name": renderer_name,
+        "log_path": "/tmp/tinker-examples/rl",
+        "dataset_builder": builder,
+        "learning_rate": 4e-5,
+        "max_tokens": 256,
+    }
+)
 config = blueprint.make()
 cli_utils.check_log_dir(config.log_path, behavior_if_exists="ask")
 asyncio.run(train.main(config))
@@ -391,16 +421,19 @@ renderer_name = model_info.get_recommended_renderer_name(model_name)
 common_config = ChatDatasetBuilderCommonConfig(
     model_name_for_tokenizer=model_name,
     renderer_name=renderer_name,
-    max_length=8192, batch_size=256,
+    max_length=8192,
+    batch_size=256,
 )
 # Key settings: dpo_beta=0.1, learning_rate=1e-5 (lower than SFT)
 config = train_dpo.Config(
-    model_name=model_name, renderer_name=renderer_name,
+    model_name=model_name,
+    renderer_name=renderer_name,
     dataset_builder=DPODatasetBuilderFromComparisons(
         common_config=common_config,
         comparison_builder=HHHComparisonBuilder(),
     ),
-    learning_rate=1e-5, dpo_beta=0.1,
+    learning_rate=1e-5,
+    dpo_beta=0.1,
     log_path="/tmp/tinker-examples/dpo",
 )
 train_dpo.main(config)
@@ -421,7 +454,9 @@ import asyncio
 from tinker_cookbook import model_info
 from tinker_cookbook.distillation import train_on_policy
 from tinker_cookbook.distillation.datasets import (
-    DistillationDatasetConfig, PromptOnlyDatasetBuilder, TeacherConfig,
+    DistillationDatasetConfig,
+    PromptOnlyDatasetBuilder,
+    TeacherConfig,
 )
 
 student_model = "Qwen/Qwen3.5-9B-Base"
@@ -430,18 +465,26 @@ renderer_name = model_info.get_recommended_renderer_name(student_model)
 
 teacher_config = TeacherConfig(base_model=teacher_model)
 dataset_builder = PromptOnlyDatasetBuilder(
-    dataset_name="deepmath", groups_per_batch=1024, group_size=4,
-    model_name_for_tokenizer=student_model, renderer_name=renderer_name,
+    dataset_name="deepmath",
+    groups_per_batch=1024,
+    group_size=4,
+    model_name_for_tokenizer=student_model,
+    renderer_name=renderer_name,
 )
 config = train_on_policy.Config(
-    dataset_configs=[DistillationDatasetConfig(
-        dataset_builder=dataset_builder, teacher_config=teacher_config,
-        groups_per_batch=1024,
-    )],
+    dataset_configs=[
+        DistillationDatasetConfig(
+            dataset_builder=dataset_builder,
+            teacher_config=teacher_config,
+            groups_per_batch=1024,
+        )
+    ],
     model_name=student_model,
     renderer_name=renderer_name,
-    learning_rate=1e-4, lora_rank=128,
-    kl_penalty_coef=1.0, kl_discount_factor=0.0,
+    learning_rate=1e-4,
+    lora_rank=128,
+    kl_penalty_coef=1.0,
+    kl_discount_factor=0.0,
     log_path="/tmp/tinker-examples/distillation",
 )
 asyncio.run(train_on_policy.main(config))
@@ -478,6 +521,7 @@ tc.optim_step(adam_params=adam_params)
 Same for evaluation — always concurrent:
 ```python
 import asyncio
+
 results = await asyncio.gather(*[evaluate_one(sc, p) for p in test_problems])
 # NOT: sequential for loop
 ```
@@ -501,6 +545,7 @@ For the complete SDK API reference, read `references/sdk.md`.
 
 ```python
 from tinker_cookbook.hyperparam_utils import get_lr
+
 lr = get_lr(model_name, is_lora=True)
 ```
 
@@ -524,8 +569,11 @@ from tinker_cookbook import checkpoint_utils
 
 # Save (two types: state for resume, sampler for inference/export)
 paths = await checkpoint_utils.save_checkpoint_async(
-    training_client=tc, name="step_100", log_path=log_path,
-    loop_state={"batch": 100}, kind="both",
+    training_client=tc,
+    name="step_100",
+    log_path=log_path,
+    loop_state={"batch": 100},
+    kind="both",
 )
 
 # Resume
@@ -538,9 +586,12 @@ tc.load_state_with_optimizer(path=record.state_path)
 ```python
 from tinker_cookbook import weights
 
-adapter_dir = weights.download(tinker_path="tinker://run-id/sampler_weights/final", output_dir="./adapter")
-weights.build_hf_model(base_model="Qwen/Qwen3-8B", adapter_path=adapter_dir,
-                       output_path="./model", dtype="bfloat16")
+adapter_dir = weights.download(
+    tinker_path="tinker://run-id/sampler_weights/final", output_dir="./adapter"
+)
+weights.build_hf_model(
+    base_model="Qwen/Qwen3-8B", adapter_path=adapter_dir, output_path="./model", dtype="bfloat16"
+)
 weights.publish_to_hf_hub(model_path="./model", repo_id="user/my-model", private=True)
 ```
 

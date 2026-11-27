@@ -24,6 +24,7 @@ This formula gives <0.5% regret vs exhaustive sweeps across diverse SFT experime
 
 ```python
 from tinker_cookbook.hyperparam_utils import get_lr
+
 lr = get_lr("Qwen/Qwen3.5-9B-Base", is_lora=True)
 ```
 
@@ -36,6 +37,7 @@ lr = get_lr("Qwen/Qwen3.5-9B-Base", is_lora=True)
 
 ```python
 from tinker_cookbook.hyperparam_utils import get_lora_param_count
+
 params = get_lora_param_count("Qwen/Qwen3.5-9B-Base", lora_rank=32)
 ```
 

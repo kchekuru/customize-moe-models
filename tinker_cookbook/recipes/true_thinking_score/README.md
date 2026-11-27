@@ -178,6 +178,7 @@ import asyncio
 import tinker
 from tinker_cookbook.recipes.true_thinking_score.tts import generate_cot_and_compute_tts
 
+
 async def main():
     service_client = tinker.ServiceClient()
     result = await generate_cot_and_compute_tts(
@@ -192,6 +193,7 @@ async def main():
         tag = " [DECORATIVE]" if step.tts <= 0.005 else ""
         tag = " [TRUE-THINKING]" if step.tts >= 0.7 else tag
         print(f"  Step {step.step_index}: TTS={step.tts:.4f}{tag}")
+
 
 asyncio.run(main())
 ```

@@ -56,13 +56,13 @@ prefix_messages = renderer.create_conversation_prefix_with_tools(tool_specs)
 ```python
 from tinker_cookbook.renderers import TrainOnWhat
 
-TrainOnWhat.ALL_ASSISTANT_MESSAGES        # Most common
-TrainOnWhat.LAST_ASSISTANT_MESSAGE        # Final response only
-TrainOnWhat.ALL_TOKENS                    # Everything including user messages
-TrainOnWhat.LAST_ASSISTANT_TURN           # Last assistant turn only
-TrainOnWhat.ALL_MESSAGES                  # All messages
+TrainOnWhat.ALL_ASSISTANT_MESSAGES  # Most common
+TrainOnWhat.LAST_ASSISTANT_MESSAGE  # Final response only
+TrainOnWhat.ALL_TOKENS  # Everything including user messages
+TrainOnWhat.LAST_ASSISTANT_TURN  # Last assistant turn only
+TrainOnWhat.ALL_MESSAGES  # All messages
 TrainOnWhat.ALL_USER_AND_SYSTEM_MESSAGES  # User + system only
-TrainOnWhat.CUSTOMIZED                    # Per-message trainable flag
+TrainOnWhat.CUSTOMIZED  # Per-message trainable flag
 ```
 
 ### Vision inputs
@@ -85,8 +85,10 @@ Use a VL renderer (`qwen3_vl`, `qwen3_5`, etc.) and pass `image_processor` to `g
 ```python
 from tinker_cookbook.renderers import register_renderer
 
+
 def my_renderer_factory(tokenizer, image_processor):
     return MyCustomRenderer(tokenizer)
+
 
 register_renderer("my_renderer", my_renderer_factory)
 ```
@@ -222,7 +224,9 @@ Generates tokens from a ModelInput prompt. Used internally by RL rollouts.
 from tinker_cookbook.completers import TinkerTokenCompleter, TokensWithLogprobs
 
 completer = TinkerTokenCompleter(
-    sampling_client=sc, max_tokens=256, temperature=1.0,
+    sampling_client=sc,
+    max_tokens=256,
+    temperature=1.0,
 )
 
 result: TokensWithLogprobs = await completer(
@@ -241,13 +245,18 @@ Higher-level: takes a conversation, returns a Message. Handles rendering and par
 from tinker_cookbook.completers import TinkerMessageCompleter
 
 completer = TinkerMessageCompleter(
-    sampling_client=sc, renderer=renderer,
-    max_tokens=256, temperature=1.0, stop_condition=None,
+    sampling_client=sc,
+    renderer=renderer,
+    max_tokens=256,
+    temperature=1.0,
+    stop_condition=None,
 )
 
-response_message: Message = await completer(messages=[
-    {"role": "user", "content": "What is 2+2?"},
-])
+response_message: Message = await completer(
+    messages=[
+        {"role": "user", "content": "What is 2+2?"},
+    ]
+)
 ```
 
 ### When to use which
@@ -262,13 +271,13 @@ Both are abstract base classes for non-Tinker backends:
 ```python
 from tinker_cookbook.completers import TokenCompleter, MessageCompleter
 
+
 class MyTokenCompleter(TokenCompleter):
-    async def __call__(self, model_input, stop) -> TokensWithLogprobs:
-        ...
+    async def __call__(self, model_input, stop) -> TokensWithLogprobs: ...
+
 
 class MyMessageCompleter(MessageCompleter):
-    async def __call__(self, messages) -> Message:
-        ...
+    async def __call__(self, messages) -> Message: ...
 ```
 
 ### Completer pitfalls

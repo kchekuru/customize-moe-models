@@ -201,7 +201,7 @@ class MathDatasetBuilder(RLDatasetBuilder):
     model_name_for_tokenizer: str
     renderer_name: str
     group_size: int
-    convo_prefix: list[renderers.Message] | None | Literal["standard"] = "standard"
+    convo_prefix: list[renderers.Message] | Literal["standard"] | None = "standard"
     seed: int = 0
 
     async def __call__(self) -> tuple[MathDataset, MathDataset]:
@@ -389,7 +389,7 @@ class Gsm8kDatasetBuilder(RLDatasetBuilder):
     model_name_for_tokenizer: str
     renderer_name: str
     group_size: int
-    convo_prefix: list[renderers.Message] | None | Literal["standard"] = "standard"
+    convo_prefix: list[renderers.Message] | Literal["standard"] | None = "standard"
     seed: int = 0
 
     async def __call__(self) -> tuple[Gsm8kDataset, Gsm8kDataset]:

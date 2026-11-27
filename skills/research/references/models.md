@@ -78,6 +78,7 @@ Use the `_disable_thinking` renderer variant when you want direct instruction-fo
 Every model needs a matching renderer. Always use automatic lookup:
 ```python
 from tinker_cookbook import model_info
+
 renderer_name = model_info.get_recommended_renderer_name(model_name)
 ```
 

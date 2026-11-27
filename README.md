@@ -57,9 +57,11 @@ Here we introduce a few Tinker primitives — the basic components to fine-tune 
 
 ```python
 import tinker
+
 service_client = tinker.ServiceClient()
 training_client = service_client.create_lora_training_client(
-  base_model="meta-llama/Llama-3.2-1B", rank=32,
+    base_model="meta-llama/Llama-3.2-1B",
+    rank=32,
 )
 training_client.forward_backward(...)
 training_client.optim_step(...)
@@ -111,7 +113,8 @@ from tinker_cookbook.eval.benchmarks import run_benchmarks, BenchmarkConfig
 
 results = await run_benchmarks(
     ["gsm8k", "mmlu_pro", "ifeval"],
-    sampling_client, renderer,
+    sampling_client,
+    renderer,
     BenchmarkConfig(save_dir="evals/step500"),
 )
 ```

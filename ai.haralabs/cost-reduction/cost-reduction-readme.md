@@ -23,7 +23,7 @@ logic. **No `TINKER_API_KEY` or network calls to the Tinker service are made.**
 ## Prerequisites
 
 ```bash
-.venv/bin/python -m pip install transformers trl peft datasets accelerate bitsandbytes chz
+uv pip install --python .venv/bin/python -e '.[local-sft]'
 ```
 
 ## Agricultural Domain Data format
@@ -34,19 +34,19 @@ Training data is a JSONL file, one conversation per line:
 {"messages": [{"role": "user", "content": "..."}, {"role": "assistant", "content": "..."}]}
 ```
 
-See `sample_train.jsonl` in this directory for a minimal agricultural-domain
-example (soil pH, crop rotation, irrigation, and farm machinery maintenance
-Q&A pairs) used for pipeline smoke-testing.
+See `tinker_cookbook/recipes/local_hara_hf_sft/sample_train.jsonl` for a
+minimal agricultural-domain example (soil pH, crop rotation, irrigation, and
+farm machinery maintenance Q&A pairs) used for pipeline smoke-testing.
 
 ## Running locally
 
 ```bash
 .venv/bin/python - <<'PY'
-from tinker_cookbook.recipes.local_hf_sft.train_trl_sft import LocalHFSFTConfig, run
+from tinker_cookbook.recipes.local_hara_hf_sft.train_trl_sft import LocalHFSFTConfig, run
 
 cfg = LocalHFSFTConfig(
     model_id="Qwen/Qwen2.5-0.5B-Instruct",
-    train_jsonl_path="tinker_cookbook/recipes/local_hf_sft/sample_train.jsonl",
+    train_jsonl_path="tinker_cookbook/recipes/local_hara_hf_sft/sample_train.jsonl",
     output_dir="./outputs/local_hf_sft_agri",
     max_length=2048,
     num_train_epochs=1,
@@ -58,6 +58,23 @@ cfg = LocalHFSFTConfig(
 run(cfg)
 PY
 ```
+
+## Verify no-key operation
+
+```bash
+unset TINKER_API_KEY
+
+# Unit + downstream-compat tests; API-key smoke tests are skipped without a key.
+.venv/bin/python -m pytest -q
+
+# Offline fine-tuning check (after the public model is cached once locally).
+HF_HUB_OFFLINE=1 .venv/bin/python -c \
+  "from tinker_cookbook.recipes.local_hara_hf_sft.train_trl_sft import resolve_renderer_name; print(resolve_renderer_name('Qwen/Qwen2.5-0.5B-Instruct'))"
+```
+
+The first `AutoTokenizer.from_pretrained` / `AutoModelForCausalLM.from_pretrained`
+call downloads public weights from the Hugging Face Hub. After that download is
+cached, set `HF_HUB_OFFLINE=1` to guarantee that no network calls are made.
 
 ## Hardware notes (Apple Silicon)
 
@@ -73,7 +90,7 @@ PY
 ## Verifying the config loads correctly
 
 ```bash
-.venv/bin/python -c "from tinker_cookbook.recipes.local_hf_sft.train_trl_sft import LocalHFSFTConfig; print(LocalHFSFTConfig())"
+.venv/bin/python -c "from tinker_cookbook.recipes.local_hara_hf_sft.train_trl_sft import LocalHFSFTConfig; print(LocalHFSFTConfig())"
 ```
 
 ## Extending to Mixture-of-Experts (MoE) models

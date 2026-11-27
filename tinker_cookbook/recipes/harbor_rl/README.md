@@ -32,7 +32,7 @@ To use harbor tasks for training or evaluation, we designed the following interf
 class HarborTask:
     task_name: str
     instruction: str
-    task_dir: Path      # must contain environment/Dockerfile and tests/test.sh
+    task_dir: Path  # must contain environment/Dockerfile and tests/test.sh
     config: dict[str, Any] = field(default_factory=dict)
 ```
 
@@ -57,9 +57,19 @@ You can customize your own task as long as they conforms to the interface above.
 ```python
 @runtime_checkable
 class SandboxInterface(Protocol):
-    async def run_command(self, command: str, workdir: str | None = None, timeout: int = 60, max_output_bytes: int | None = None) -> SandboxResult: ...
-    async def read_file(self, path: str, max_bytes: int | None = None, timeout: int = 60) -> SandboxResult: ...
-    async def write_file(self, path: str, content: str | bytes, executable: bool = False, timeout: int = 60) -> SandboxResult: ...
+    async def run_command(
+        self,
+        command: str,
+        workdir: str | None = None,
+        timeout: int = 60,
+        max_output_bytes: int | None = None,
+    ) -> SandboxResult: ...
+    async def read_file(
+        self, path: str, max_bytes: int | None = None, timeout: int = 60
+    ) -> SandboxResult: ...
+    async def write_file(
+        self, path: str, content: str | bytes, executable: bool = False, timeout: int = 60
+    ) -> SandboxResult: ...
     async def send_heartbeat(self) -> None: ...
     async def cleanup(self) -> None: ...
 ```
@@ -73,9 +83,11 @@ class SandboxInterface(Protocol):
 ```python
 SandboxFactory = Callable[[Path, int], Awaitable[SandboxInterface]]
 
+
 async def default_sandbox_factory(env_dir: Path, timeout: int) -> SandboxInterface:
     """Create a Modal sandbox from a task environment directory."""
     import modal
+
     dockerfile_path = env_dir / "Dockerfile"
     image = modal.Image.from_dockerfile(path=str(dockerfile_path), context_dir=str(env_dir))
     return await ModalSandbox.create(image=image, timeout=timeout)

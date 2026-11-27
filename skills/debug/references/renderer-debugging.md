@@ -20,6 +20,7 @@ Different `transformers` versions have known bugs that affect specific models:
 
 ```python
 import transformers
+
 print(f"transformers: {transformers.__version__}")
 ```
 
@@ -32,6 +33,7 @@ This script compares the cookbook renderer against HuggingFace's `apply_chat_tem
 Renderer parity check — verifies cookbook renderer matches HuggingFace tokenizer.
 Usage: python renderer_check.py
 """
+
 from tinker_cookbook.renderers import get_renderer
 from tinker_cookbook.tokenizer_utils import get_tokenizer
 from tinker_cookbook.model_info import get_recommended_renderer_name
@@ -71,11 +73,13 @@ for i, messages in enumerate(test_cases):
     cookbook_tokens = cookbook_mi.to_ints()
 
     # HuggingFace tokens
-    hf_tokens = list(tokenizer.apply_chat_template(
-        messages,
-        add_generation_prompt=True,
-        tokenize=True,
-    ))
+    hf_tokens = list(
+        tokenizer.apply_chat_template(
+            messages,
+            add_generation_prompt=True,
+            tokenize=True,
+        )
+    )
 
     if cookbook_tokens == hf_tokens:
         print(f"PASS: {len(cookbook_tokens)} tokens match")
@@ -88,10 +92,14 @@ for i, messages in enumerate(test_cases):
             if cookbook_tokens[j] != hf_tokens[j]:
                 ctx_start = max(0, j - 3)
                 print(f"  First diff at position {j}:")
-                print(f"    cookbook[{ctx_start}:{j+3}]: {cookbook_tokens[ctx_start:j+3]}")
-                print(f"    HF[{ctx_start}:{j+3}]:      {hf_tokens[ctx_start:j+3]}")
-                print(f"    cookbook decoded: {tokenizer.decode(cookbook_tokens[max(0,j-5):j+5])!r}")
-                print(f"    HF decoded:      {tokenizer.decode(hf_tokens[max(0,j-5):j+5])!r}")
+                print(f"    cookbook[{ctx_start}:{j + 3}]: {cookbook_tokens[ctx_start : j + 3]}")
+                print(f"    HF[{ctx_start}:{j + 3}]:      {hf_tokens[ctx_start : j + 3]}")
+                print(
+                    f"    cookbook decoded: {tokenizer.decode(cookbook_tokens[max(0, j - 5) : j + 5])!r}"
+                )
+                print(
+                    f"    HF decoded:      {tokenizer.decode(hf_tokens[max(0, j - 5) : j + 5])!r}"
+                )
                 break
 
         if len(cookbook_tokens) != len(hf_tokens):
@@ -114,10 +122,14 @@ Common issues:
 When comparing against HF for thinking models:
 ```python
 # For Qwen3 with thinking enabled:
-hf_tokens = tokenizer.apply_chat_template(messages, add_generation_prompt=True, tokenize=True, thinking=True)
+hf_tokens = tokenizer.apply_chat_template(
+    messages, add_generation_prompt=True, tokenize=True, thinking=True
+)
 
 # For Qwen3 with thinking disabled:
-hf_tokens = tokenizer.apply_chat_template(messages, add_generation_prompt=True, tokenize=True, thinking=False)
+hf_tokens = tokenizer.apply_chat_template(
+    messages, add_generation_prompt=True, tokenize=True, thinking=False
+)
 ```
 
 ## Tool calling
@@ -218,10 +230,13 @@ When comparing VL renderer output against HuggingFace, you need to include image
 from PIL import Image
 
 messages = [
-    {"role": "user", "content": [
-        {"type": "image", "image": Image.open("test.png")},
-        {"type": "text", "text": "What's in this image?"},
-    ]},
+    {
+        "role": "user",
+        "content": [
+            {"type": "image", "image": Image.open("test.png")},
+            {"type": "text", "text": "What's in this image?"},
+        ],
+    },
 ]
 
 # Cookbook

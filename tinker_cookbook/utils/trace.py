@@ -17,7 +17,7 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from io import TextIOWrapper
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 if TYPE_CHECKING:
     from tinker_cookbook.stores.training_store import TrainingRunStore
@@ -444,6 +444,7 @@ def _instrument_sdk_clients() -> None:
             "load_state_async",
             "load_state_with_optimizer_async",
             "save_weights_for_sampler_async",
+            "save_weights_external_async",
             "save_weights_and_get_sampling_client_async",
             "create_sampling_client_async",
         ],
@@ -461,7 +462,9 @@ def _instrument_sdk_clients() -> None:
                 # Avoid double-wrapping
                 if not getattr(original, "_scope_instrumented", False):
                     wrapped = scope(original)
-                    wrapped._scope_instrumented = True  # type: ignore[attr-defined]
+                    # `scope` returns a Callable, but the wrapper is a real
+                    # function; cast keeps type checkers happy while tagging it.
+                    cast(Any, wrapped)._scope_instrumented = True
                     setattr(cls, method_name, wrapped)
 
 
@@ -763,7 +766,7 @@ def scope(func: Callable[..., Any]) -> Callable[..., Any]:
             trace_init()
             asyncio.run(foo())
     """
-    return _make_scope_wrapper(func, func.__name__)
+    return _make_scope_wrapper(func, getattr(func, "__name__", repr(func)))
 
 
 @contextlib.asynccontextmanager
@@ -890,7 +893,7 @@ def update_scope_context(values: dict[str, Any]) -> None:
 def _build_gantt_chart(span_records: list[dict[str, Any]], step: int) -> Any:
     """Build a Plotly Gantt chart from span records. Returns a plotly Figure or None."""
     try:
-        import plotly.express as px  # type: ignore[reportMissingImports]
+        import plotly.express as px  # type: ignore[reportMissingImports]  # ty: ignore[import-not-found]
     except ImportError:
         logger.debug("plotly not installed, skipping Gantt chart")
         return None

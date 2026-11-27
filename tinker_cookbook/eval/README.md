@@ -9,6 +9,7 @@ Lightweight interfaces called every N training steps. Return `dict[str, float]` 
 ```python
 from tinker_cookbook.eval import SamplingClientEvaluator
 
+
 class MyEval(SamplingClientEvaluator):
     async def __call__(self, sampling_client):
         # generate, grade, return metrics
@@ -35,7 +36,8 @@ print(f"GSM8K: {result.score:.1%}")  # GSM8K: 78.3%
 # Multiple benchmarks (parallel by default)
 results = await run_benchmarks(
     ["gsm8k", "mmlu_pro", "ifeval"],
-    sampling_client, renderer,
+    sampling_client,
+    renderer,
     BenchmarkConfig(save_dir="evals/step500", max_examples=200),
 )
 ```
@@ -149,6 +151,7 @@ from tinker_cookbook.renderers import get_text_content
 from tinker_cookbook.renderers.base import Message
 from tinker_cookbook.rl.message_env import MessageEnv, MessageStepResult
 
+
 class MyMessageEnv(MessageEnv):
     def __init__(self, question: str, expected: str, example_id: str = ""):
         self.question = question
@@ -177,6 +180,7 @@ from tinker_cookbook.eval.benchmarks._types import BenchmarkBuilder, BenchmarkCo
 from tinker_cookbook.eval.benchmarks import register
 from tinker_cookbook.rl.message_env import EnvFromMessageEnv
 
+
 class MyBenchmarkBuilder(BenchmarkBuilder):
     name = "my_benchmark"
 
@@ -187,13 +191,16 @@ class MyBenchmarkBuilder(BenchmarkBuilder):
         envs = []
         for row in ds:
             msg_env = MyMessageEnv(row["question"], row["answer"])
-            envs.append(EnvFromMessageEnv(
-                renderer=renderer,
-                message_env=msg_env,
-                failed_parse_reward=0.0,
-                context_overflow_reward=0.0,
-            ))
+            envs.append(
+                EnvFromMessageEnv(
+                    renderer=renderer,
+                    message_env=msg_env,
+                    failed_parse_reward=0.0,
+                    context_overflow_reward=0.0,
+                )
+            )
         return envs
+
 
 register(MyBenchmarkBuilder())
 ```
@@ -222,7 +229,9 @@ run_id = store.create_run(
     benchmarks=["gsm8k", "ifeval"],
 )
 await run_benchmarks(
-    ["gsm8k", "ifeval"], sampling_client, renderer,
+    ["gsm8k", "ifeval"],
+    sampling_client,
+    renderer,
     BenchmarkConfig(save_dir=store.run_dir(run_id)),
 )
 store.finalize_run(run_id)

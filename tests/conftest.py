@@ -12,17 +12,25 @@ Recipes NOT yet covered by integration tests:
 """
 
 import os
+from pathlib import Path
 
 import pytest
 
 
 def pytest_collection_modifyitems(config, items):
-    """Skip smoke tests locally when TINKER_API_KEY is not set. Fail on CI."""
+    """Skip API-key smoke tests locally when TINKER_API_KEY is not set. Fail on CI."""
     if os.environ.get("TINKER_API_KEY"):
         return
 
-    # Separate smoke tests from downstream_compat tests (which don't need API keys)
-    smoke_items = [item for item in items if "downstream_compat" not in str(item.fspath)]
+    # Only tests/ holds API-key smoke tests. Unit tests under tinker_cookbook/
+    # and downstream API-contract tests must still run without a key.
+    tests_dir = Path(__file__).parent.resolve()
+    smoke_items = [
+        item
+        for item in items
+        if Path(str(item.fspath)).resolve().is_relative_to(tests_dir)
+        and "downstream_compat" not in str(item.fspath)
+    ]
     if not smoke_items:
         return
 

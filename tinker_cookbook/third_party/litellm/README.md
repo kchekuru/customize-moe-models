@@ -57,6 +57,7 @@ You can list available models with:
 
 ```python
 import tinker
+
 service = tinker.ServiceClient()
 for m in service.get_server_capabilities().supported_models:
     print(m.model_name)
@@ -117,7 +118,7 @@ response = await litellm.acompletion(
 
 # Raw token IDs are in provider_specific_fields
 fields = response.choices[0].message.provider_specific_fields
-prompt_token_ids = fields["prompt_token_ids"]       # list[int]
+prompt_token_ids = fields["prompt_token_ids"]  # list[int]
 completion_token_ids = fields["completion_token_ids"]  # list[int]
 
 # Use these directly with Tinker's training APIs
@@ -145,18 +146,20 @@ response = await litellm.acompletion(
     model="tinker/my-agent",
     messages=[{"role": "user", "content": "What's the weather in SF?"}],
     base_model="Qwen/Qwen3.5-4B",
-    tools=[{
-        "type": "function",
-        "function": {
-            "name": "get_weather",
-            "description": "Get weather for a city",
-            "parameters": {
-                "type": "object",
-                "properties": {"city": {"type": "string"}},
-                "required": ["city"],
+    tools=[
+        {
+            "type": "function",
+            "function": {
+                "name": "get_weather",
+                "description": "Get weather for a city",
+                "parameters": {
+                    "type": "object",
+                    "properties": {"city": {"type": "string"}},
+                    "required": ["city"],
+                },
             },
-        },
-    }],
+        }
+    ],
 )
 ```
 

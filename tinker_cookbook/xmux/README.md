@@ -20,7 +20,7 @@ job_specs = [
     JobSpec(
         main_fn=train_model,  # Your training function
         log_relpath="sweep/model1/lr0.001",
-        entrypoint_config={"model": "bert", "lr": 0.001}
+        entrypoint_config={"model": "bert", "lr": 0.001},
     ),
     # ... more experiments
 ]
@@ -41,7 +41,7 @@ JobSpec(
     log_relpath="sweep/bert/lr0.001",
     entrypoint_config=config,
     tmux_window_name="bert",  # Groups all BERT experiments
-    pane_title="lr0.001"      # Shows in the pane
+    pane_title="lr0.001",  # Shows in the pane
 )
 ```
 

@@ -21,6 +21,7 @@ If > 1s, the pydantic version likely has a serialization regression.
 Usage:
     python serialization_test.py
 """
+
 import sys
 import time
 
@@ -42,7 +43,9 @@ print(f"pydantic: {pydantic.__version__}")
 print(f"tinker:   {tinker_version}")
 print(f"torch:    {torch.__version__}")
 try:
-    import numpy; print(f"numpy:    {numpy.__version__}")
+    import numpy
+
+    print(f"numpy:    {numpy.__version__}")
 except ImportError:
     print("numpy:    (not installed)")
 print()

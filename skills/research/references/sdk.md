@@ -15,8 +15,12 @@ svc = ServiceClient(user_metadata={"experiment": "v1"}, project_id="my-project")
 
 # Create a new LoRA training client
 tc = svc.create_lora_training_client(
-    base_model="Qwen/Qwen3-8B", rank=32,
-    seed=None, train_mlp=True, train_attn=True, train_unembed=True,
+    base_model="Qwen/Qwen3-8B",
+    rank=32,
+    seed=None,
+    train_mlp=True,
+    train_attn=True,
+    train_unembed=True,
 )
 
 # Resume from a training checkpoint
@@ -92,9 +96,11 @@ Submit `forward_backward_async` and `optim_step_async` back-to-back before await
 from tinker import SamplingParams
 
 response = sc.sample(
-    prompt=model_input, num_samples=4,
+    prompt=model_input,
+    num_samples=4,
     sampling_params=SamplingParams(max_tokens=256, temperature=1.0),
-    include_prompt_logprobs=False, topk_prompt_logprobs=0,
+    include_prompt_logprobs=False,
+    topk_prompt_logprobs=0,
 )
 
 for seq in response.sequences:
@@ -143,8 +149,8 @@ The SDK retries all HTTP API calls automatically (10 attempts, exponential backo
 
 Override via `max_retries` on client creation:
 ```python
-svc = tinker.ServiceClient(max_retries=3)   # reduce retries
-svc = tinker.ServiceClient(max_retries=0)   # disable retries
+svc = tinker.ServiceClient(max_retries=3)  # reduce retries
+svc = tinker.ServiceClient(max_retries=0)  # disable retries
 ```
 
 Do not add retry wrappers around Tinker API calls — the SDK handles this.
@@ -162,7 +168,7 @@ from tinker import ModelInput
 
 mi = ModelInput.from_ints([1, 2, 3, 4, 5])
 tokens = mi.to_ints()
-length = mi.length           # Property, not method
+length = mi.length  # Property, not method
 mi2 = mi.append(chunk)
 mi3 = mi.append_int(42)
 mi_empty = ModelInput.empty()
@@ -200,8 +206,12 @@ datum = Datum(
 from tinker import SamplingParams
 
 params = SamplingParams(
-    max_tokens=256, temperature=1.0, top_k=50, top_p=0.95,
-    stop=["<|eot_id|>"], seed=42,
+    max_tokens=256,
+    temperature=1.0,
+    top_k=50,
+    top_p=0.95,
+    stop=["<|eot_id|>"],
+    seed=42,
 )
 ```
 
@@ -211,8 +221,12 @@ params = SamplingParams(
 from tinker import AdamParams
 
 adam = AdamParams(
-    learning_rate=2e-4, beta1=0.9, beta2=0.95, eps=1e-12,
-    weight_decay=0.0, grad_clip_norm=1.0,
+    learning_rate=2e-4,
+    beta1=0.9,
+    beta2=0.95,
+    eps=1e-12,
+    weight_decay=0.0,
+    grad_clip_norm=1.0,
 )
 ```
 
@@ -230,8 +244,8 @@ config = LoraConfig(rank=32, seed=None, train_mlp=True, train_attn=True, train_u
 
 ```python
 result = tc.forward_backward(data=batch, loss_fn="cross_entropy")
-result.metrics              # dict[str, float]
-result.loss_fn_outputs      # list[LossFnOutput]
+result.metrics  # dict[str, float]
+result.loss_fn_outputs  # list[LossFnOutput]
 result.loss_fn_output_type  # str
 ```
 
@@ -239,13 +253,13 @@ result.loss_fn_output_type  # str
 
 ```python
 response = sc.sample(prompt=mi, num_samples=4, sampling_params=params)
-response.sequences                # list[SampledSequence]
-response.prompt_logprobs          # Optional[list[Optional[float]]]
-response.topk_prompt_logprobs     # Optional[list[Optional[list[tuple[int, float]]]]]
+response.sequences  # list[SampledSequence]
+response.prompt_logprobs  # Optional[list[Optional[float]]]
+response.topk_prompt_logprobs  # Optional[list[Optional[list[tuple[int, float]]]]]
 
 for seq in response.sequences:
-    seq.tokens       # list[int]
-    seq.logprobs     # Optional[list[float]]
+    seq.tokens  # list[int]
+    seq.logprobs  # Optional[list[float]]
     seq.stop_reason  # StopReason: "length" | "stop"
 ```
 

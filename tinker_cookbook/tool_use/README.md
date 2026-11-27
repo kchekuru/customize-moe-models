@@ -17,11 +17,13 @@ The `tool_use` library provides:
 ```python
 from tinker_cookbook.tool_use import tool, simple_tool_result, build_agent_tool_env
 
+
 @tool
 async def search(query: Annotated[str, "Search query"]) -> ToolResult:
     """Search for information."""
     results = await do_search(query)
     return simple_tool_result(json.dumps(results))
+
 
 env = build_agent_tool_env(
     renderer=renderer,
@@ -53,6 +55,7 @@ class MyTools:
         result = await lookup_api(id, self._api_key)
         return simple_tool_result(json.dumps(result))
 
+
 # Usage - both tools share the same api_key
 tools_obj = MyTools(api_key="...")
 env = build_agent_tool_env(..., tools=[tools_obj.search, tools_obj.lookup])
@@ -72,10 +75,7 @@ The lifetime of an instantiated tool can be controlled by where it's instantiate
 ```python
 # A fresh tool is instantiated for each Env
 async def make_envs(self) -> Sequence[Env]:
-    return [
-        build_agent_tool_env(tools=[CodeTool(self.task).run])
-        for _ in range(self.group_size)
-    ]
+    return [build_agent_tool_env(tools=[CodeTool(self.task).run]) for _ in range(self.group_size)]
 ```
 
 **Shared across trajectories** (stateless or shared client):
@@ -83,6 +83,7 @@ async def make_envs(self) -> Sequence[Env]:
 # A single tool is instantiated, and shared across Envs
 def __init__(self, task, chroma_tool: ChromaTool):
     self.chroma_tool = chroma_tool  # Created once, reused
+
 
 async def make_envs(self) -> Sequence[Env]:
     return [

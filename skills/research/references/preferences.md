@@ -27,7 +27,9 @@ from tinker_cookbook import checkpoint_utils, cli_utils, model_info
 from tinker_cookbook.preference import train_dpo
 from tinker_cookbook.preference.dpo_datasets import DPODatasetBuilderFromComparisons
 from tinker_cookbook.recipes.preference.datasets import (
-    HelpSteer3ComparisonBuilder, HHHComparisonBuilder, UltraFeedbackComparisonBuilder,
+    HelpSteer3ComparisonBuilder,
+    HHHComparisonBuilder,
+    UltraFeedbackComparisonBuilder,
 )
 from tinker_cookbook.supervised.types import ChatDatasetBuilderCommonConfig
 from tinker_cookbook.utils.lr_scheduling import LRSchedule
@@ -102,11 +104,15 @@ if __name__ == "__main__":
 from tinker_cookbook.preference.dpo_datasets import ComparisonBuilder
 from tinker_cookbook.renderers.base import Message
 
+
 class MyComparisonBuilder(ComparisonBuilder):
     async def __call__(self) -> list[tuple[list[Message], list[Message]]]:
         return [
             (
-                [{"role": "user", "content": "Hi"}, {"role": "assistant", "content": "Good answer"}],
+                [
+                    {"role": "user", "content": "Hi"},
+                    {"role": "assistant", "content": "Good answer"},
+                ],
                 [{"role": "user", "content": "Hi"}, {"role": "assistant", "content": "Bad answer"}],
             ),
         ]
@@ -127,6 +133,7 @@ Full 3-stage pipeline: SFT -> Reward Model -> RL.
 Stages are chained by checkpoints:
 ```python
 from tinker_cookbook import checkpoint_utils
+
 sft_ckpt = checkpoint_utils.get_last_checkpoint(sft_log_path)
 rm_ckpt = checkpoint_utils.get_last_checkpoint(rm_log_path)
 ```
@@ -173,15 +180,22 @@ class CLIConfig:
 def sft_stage(cli: CLIConfig, log_path: str):
     renderer_name = model_info.get_recommended_renderer_name(cli.base_model)
     common = ChatDatasetBuilderCommonConfig(
-        model_name_for_tokenizer=cli.base_model, renderer_name=renderer_name,
-        max_length=cli.max_length, batch_size=cli.batch_size,
+        model_name_for_tokenizer=cli.base_model,
+        renderer_name=renderer_name,
+        max_length=cli.max_length,
+        batch_size=cli.batch_size,
         train_on_what=TrainOnWhat.ALL_ASSISTANT_MESSAGES,
     )
     config = supervised_train.Config(
-        log_path=log_path, model_name=cli.base_model, renderer_name=renderer_name,
+        log_path=log_path,
+        model_name=cli.base_model,
+        renderer_name=renderer_name,
         dataset_builder=NoRobotsBuilder(common_config=common),
-        learning_rate=cli.sft_learning_rate, lr_schedule="linear",
-        num_epochs=1, lora_rank=cli.lora_rank, max_steps=cli.max_steps,
+        learning_rate=cli.sft_learning_rate,
+        lr_schedule="linear",
+        num_epochs=1,
+        lora_rank=cli.lora_rank,
+        max_steps=cli.max_steps,
     )
     asyncio.run(supervised_train.main(config))
 
@@ -189,16 +203,23 @@ def sft_stage(cli: CLIConfig, log_path: str):
 def train_rm(cli: CLIConfig, log_path: str):
     renderer_name = model_info.get_recommended_renderer_name(cli.base_model)
     common = ChatDatasetBuilderCommonConfig(
-        model_name_for_tokenizer=cli.base_model, renderer_name=renderer_name,
-        max_length=cli.max_length, batch_size=cli.batch_size,
+        model_name_for_tokenizer=cli.base_model,
+        renderer_name=renderer_name,
+        max_length=cli.max_length,
+        batch_size=cli.batch_size,
     )
     config = supervised_train.Config(
-        log_path=log_path, model_name=cli.base_model, renderer_name=renderer_name,
+        log_path=log_path,
+        model_name=cli.base_model,
+        renderer_name=renderer_name,
         dataset_builder=ChatDatasetBuilderFromComparisons(
             common_config=common, comparison_builder=HHHComparisonBuilder()
         ),
-        learning_rate=cli.rm_learning_rate, lr_schedule="linear",
-        num_epochs=1, lora_rank=cli.lora_rank, max_steps=cli.max_steps,
+        learning_rate=cli.rm_learning_rate,
+        lr_schedule="linear",
+        num_epochs=1,
+        lora_rank=cli.lora_rank,
+        max_steps=cli.max_steps,
     )
     asyncio.run(supervised_train.main(config))
 
@@ -210,21 +231,28 @@ async def train_rl(cli: CLIConfig, log_path: str, sft_log: str, rm_log: str):
 
     renderer_name = model_info.get_recommended_renderer_name(cli.base_model)
     preference_model = PreferenceModelBuilderFromChatRenderer(
-        renderer_name=renderer_name, model_name=cli.base_model,
+        renderer_name=renderer_name,
+        model_name=cli.base_model,
         rm_weights_path=rm_ckpt.sampler_path,
     )
     config = train.Config(
-        model_name=cli.base_model, renderer_name=renderer_name,
+        model_name=cli.base_model,
+        renderer_name=renderer_name,
         dataset_builder=preference_envs.PairwisePreferenceRLDatasetBuilder(
             comparison_builder=HHHComparisonBuilder(),
-            policy_renderer_name=renderer_name, policy_model_name=cli.base_model,
+            policy_renderer_name=renderer_name,
+            policy_model_name=cli.base_model,
             preference_model_builder=preference_model,
-            batch_size=cli.batch_size, group_size=cli.rl_group_size,
+            batch_size=cli.batch_size,
+            group_size=cli.rl_group_size,
             tournament_pattern=preference_envs.TournamentPattern.ALL_PAIRS_BOTH_WAYS,
         ),
         load_checkpoint_path=sft_ckpt.state_path,
-        learning_rate=cli.rl_learning_rate, max_tokens=cli.rl_max_tokens,
-        lora_rank=cli.lora_rank, log_path=log_path, max_steps=cli.max_steps,
+        learning_rate=cli.rl_learning_rate,
+        max_tokens=cli.rl_max_tokens,
+        lora_rank=cli.lora_rank,
+        log_path=log_path,
+        max_steps=cli.max_steps,
     )
     await train.main(config)
 

@@ -44,7 +44,7 @@ The first half (along the fused dimension) is `gate`, the second half is `up`:
 ```python
 # Splitting:
 gate = gate_up_proj[..., :out_dim]
-up   = gate_up_proj[..., out_dim:]
+up = gate_up_proj[..., out_dim:]
 
 # Merging LoRA delta for gate (w1):
 gate_up_proj[..., :out_dim] += lora_B_gate @ lora_A_gate
@@ -69,8 +69,8 @@ model.layers.{N}.mlp.experts.gate_up_proj
 
 ```python
 # Splitting:
-gate = gate_up_proj[..., 0::2]   # even indices
-up   = gate_up_proj[..., 1::2]   # odd indices
+gate = gate_up_proj[..., 0::2]  # even indices
+up = gate_up_proj[..., 1::2]  # odd indices
 
 # Merging LoRA delta for gate:
 gate_up_proj[..., 0::2] += delta_gate
@@ -142,7 +142,9 @@ If mismatches cluster in `gate_up_proj` weights, the fusion convention is wrong.
 ```python
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-model = AutoModelForCausalLM.from_pretrained("./merged_model", torch_dtype=torch.bfloat16, device_map="auto")
+model = AutoModelForCausalLM.from_pretrained(
+    "./merged_model", torch_dtype=torch.bfloat16, device_map="auto"
+)
 tokenizer = AutoTokenizer.from_pretrained("./merged_model")
 
 # Use the exact same tokens as Tinker

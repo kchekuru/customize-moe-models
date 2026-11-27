@@ -33,9 +33,11 @@ HOLDER_AIOMONITOR = {"port": 20101, "webui_port": 20102, "console_port": 20103}
 MAIN_AIOMONITOR = {"port": 21101, "webui_port": 21102, "console_port": 21103}
 TASK_DUMP_INTERVAL_SEC = 1.0
 
+
 # ── Periodic async task dump ──────────────────────────────────────
 async def _periodic_dump_tasks(loop, label):
     import time
+
     while True:
         await asyncio.sleep(TASK_DUMP_INTERVAL_SEC)
         ts = time.strftime("%Y-%m-%d %H:%M:%S")
@@ -63,14 +65,17 @@ async def _periodic_dump_tasks(loop, label):
             print(f"  {t.get_name()!r}: {state}  {coro_s}")
         print(f"===== {ts} end [{label}] =====\n", flush=True)
 
+
 # ── Thread stack watchdog ─────────────────────────────────────────
 _WATCHDOG_INTERVAL_SEC = 1.0
 _watchdog_started = False
 _watchdog_lock = None
 _watchdog_targets = {}
 
+
 def _watchdog_register_this_thread(label):
     import threading
+
     global _watchdog_lock, _watchdog_targets
     if _watchdog_lock is None:
         _watchdog_lock = threading.Lock()
@@ -78,8 +83,10 @@ def _watchdog_register_this_thread(label):
     with _watchdog_lock:
         _watchdog_targets[t.ident] = label
 
+
 def _ensure_thread_stack_watchdog():
     import sys, threading, time, traceback
+
     global _watchdog_started, _watchdog_lock
     if _watchdog_lock is None:
         _watchdog_lock = threading.Lock()
@@ -116,6 +123,7 @@ def _ensure_thread_stack_watchdog():
         _watchdog_started = True
         threading.Thread(target=watchdog_loop, name="stack-watchdog", daemon=True).start()
 
+
 # ── Patch SDK internal thread to add monitoring ───────────────────
 def _patch_internal_client_holder_background_thread():
     import aiomonitor
@@ -141,6 +149,7 @@ def _patch_internal_client_holder_background_thread():
         "_background_thread_func",
         _background_thread_func_with_monitor,
     )
+
 
 # ── Main runner with monitoring ───────────────────────────────────
 def _run_main_with_aiomonitor(task):
@@ -171,6 +180,7 @@ def _run_main_with_aiomonitor(task):
         with contextlib.suppress(RuntimeError):
             loop.run_until_complete(loop.shutdown_asyncgens())
         loop.close()
+
 
 # ── Activate everything ───────────────────────────────────────────
 _ensure_thread_stack_watchdog()
@@ -221,9 +231,11 @@ import asyncio, sys, threading, time, traceback
 _watchdog_targets = {}
 _lock = threading.Lock()
 
+
 def register_thread(label):
     with _lock:
         _watchdog_targets[threading.current_thread().ident] = label
+
 
 def start_watchdog(interval=1.0):
     def loop():
@@ -238,7 +250,9 @@ def start_watchdog(interval=1.0):
                 if fr:
                     stack = "".join(traceback.format_stack(fr, limit=10))
                     print(f"\n[{ts}] {label}:\n{stack}", flush=True)
+
     threading.Thread(target=loop, daemon=True).start()
+
 
 # Add before any tinker imports:
 register_thread("main")
@@ -246,10 +260,15 @@ start_watchdog()
 
 # Then monkey-patch the holder thread to register itself:
 from tinker.lib.internal_client_holder import InternalClientHolderThreadSingleton
+
 _orig = InternalClientHolderThreadSingleton._background_thread_func
+
+
 def _patched(self):
     register_thread("holder")
     _orig(self)
+
+
 InternalClientHolderThreadSingleton._background_thread_func = _patched
 
 # ... rest of script ...

@@ -29,8 +29,11 @@ import chz
 from tinker_cookbook import checkpoint_utils, cli_utils
 from tinker_cookbook.distillation import train_on_policy
 from tinker_cookbook.distillation.datasets import (
-    DistillationDatasetConfig, PromptOnlyDatasetBuilder, TeacherConfig,
+    DistillationDatasetConfig,
+    PromptOnlyDatasetBuilder,
+    TeacherConfig,
 )
+
 
 @chz.chz
 class CLIConfig:
@@ -49,6 +52,7 @@ class CLIConfig:
     log_path: str | None = None
     behavior_if_log_dir_exists: cli_utils.LogdirBehavior = "ask"
     max_steps: int | None = None
+
 
 async def cli_main(cli_config: CLIConfig):
     renderer_name = await checkpoint_utils.resolve_renderer_name_from_checkpoint_or_default_async(
@@ -84,6 +88,7 @@ async def cli_main(cli_config: CLIConfig):
         max_steps=cli_config.max_steps,
     )
     await train_on_policy.main(config)
+
 
 if __name__ == "__main__":
     cli_config = chz.entrypoint(CLIConfig)

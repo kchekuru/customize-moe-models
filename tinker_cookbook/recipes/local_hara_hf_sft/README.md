@@ -35,7 +35,7 @@ Tinker service is never used for the actual training compute.
 ## Prerequisites
 
 ```bash
-.venv/bin/python -m pip install transformers trl peft datasets accelerate bitsandbytes chz
+uv pip install --python .venv/bin/python -e '.[local-sft]'
 ```
 
 ## Data format
@@ -49,6 +49,12 @@ Training data is a JSONL file, one conversation per line:
 See `sample_train.jsonl` in this directory for a minimal agricultural-domain
 example (soil pH, crop rotation, irrigation, and farm machinery maintenance
 Q&A pairs) used for pipeline smoke-testing.
+
+The default `train_on_what` is `LAST_ASSISTANT_MESSAGE`: offline renderer
+fallbacks such as `qwen3` do not satisfy the sequence extension property, so
+training every assistant message in a multi-turn conversation would mix
+different context prefixes. Set `train_on_what=TrainOnWhat.ALL_ASSISTANT_MESSAGES`
+only for renderers that satisfy the extension property.
 
 ## Running locally (no API key)
 

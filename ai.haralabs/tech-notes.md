@@ -5,9 +5,11 @@ model name. The appropriate renderer and tokenizer are selected automatically.
 
 ```python
 import tinker
+
 service_client = tinker.ServiceClient()
 training_client = service_client.create_lora_training_client(
-  base_model="thinkingmachines/Inkling", rank=32,
+    base_model="thinkingmachines/Inkling",
+    rank=32,
 )
 training_client.forward_backward(...)
 training_client.optim_step(...)

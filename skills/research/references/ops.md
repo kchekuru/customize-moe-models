@@ -29,8 +29,12 @@ sc = tc.save_weights_and_get_sampling_client()  # Ephemeral, not persistently sa
 from tinker_cookbook.checkpoint_utils import CheckpointRecord
 
 record = CheckpointRecord(
-    name="step_100", batch=100, epoch=1, final=False,
-    state_path="tinker://...", sampler_path="tinker://...",
+    name="step_100",
+    batch=100,
+    epoch=1,
+    final=False,
+    state_path="tinker://...",
+    sampler_path="tinker://...",
     extra={"eval_loss": 0.5},
 )
 d = record.to_dict()
@@ -45,7 +49,9 @@ from tinker_cookbook import checkpoint_utils
 
 # Save (async)
 paths = await checkpoint_utils.save_checkpoint_async(
-    training_client=tc, name="step_100", log_path="/tmp/my_run",
+    training_client=tc,
+    name="step_100",
+    log_path="/tmp/my_run",
     loop_state={"batch": 100, "epoch": 1},
     kind="both",  # "state", "sampler", or "both"
     ttl_seconds=None,
@@ -224,6 +230,7 @@ url = weights.publish_to_hf_hub(
 
 ```python
 import json
+
 with open("iteration_000010/train_rollout_summaries.jsonl") as f:
     trajectories = [json.loads(line) for line in f]
 for traj in trajectories:
@@ -234,11 +241,11 @@ for traj in trajectories:
 
 ```python
 import json
+
 with open("iteration_000060/train_logtree.json") as f:
     data = json.load(f)
 
-groups = [c for c in data["root"]["children"]
-          if isinstance(c, dict) and c.get("tag") == "section"]
+groups = [c for c in data["root"]["children"] if isinstance(c, dict) and c.get("tag") == "section"]
 ```
 
 #### Extracting conversations
@@ -267,10 +274,12 @@ def find_tables(node):
             results.extend(find_tables(c))
     return results
 
+
 def parse_table_rows(table_node):
     rows = []
     for part in table_node.get("children", []):
-        if not isinstance(part, dict): continue
+        if not isinstance(part, dict):
+            continue
         if part.get("tag") in ("tbody", "thead"):
             for row in part.get("children", []):
                 if isinstance(row, dict) and row.get("tag") == "tr":
@@ -281,8 +290,10 @@ def parse_table_rows(table_node):
                     rows.append(cells)
     return rows
 
+
 def get_text(node):
-    if isinstance(node, str): return node
+    if isinstance(node, str):
+        return node
     return "".join(get_text(c) for c in node.get("children", []))
 ```
 
@@ -290,6 +301,7 @@ def get_text(node):
 
 ```python
 from tinker_cookbook.utils import ml_log
+
 ml_logger = ml_log.setup_logging(log_path="/tmp/my_run", wandb_project=None, wandb_name=None)
 ml_logger.log_metrics({"train/loss": 0.5, "eval/accuracy": 0.85}, step=100)
 ```
@@ -316,6 +328,7 @@ for i_batch in range(n_batches):
 async def my_training_step(tc, batch):
     result = await tc.forward_backward_async(data=batch, loss_fn="cross_entropy")
     return result
+
 
 async with trace.scope_span("data_prep"):
     batch = prepare_next_batch(...)
@@ -352,8 +365,8 @@ config = train.Config(wandb_project="my-project", wandb_name="my-experiment", ..
 Two tiers:
 ```python
 config = supervised_train.Config(
-    evaluator_builders=[...],              # Every eval_every steps
-    infrequent_evaluator_builders=[...],   # Every infrequent_eval_every steps
+    evaluator_builders=[...],  # Every eval_every steps
+    infrequent_evaluator_builders=[...],  # Every infrequent_eval_every steps
     eval_every=8,
     infrequent_eval_every=50,
 )
@@ -365,6 +378,7 @@ Uses `SamplingClientEvaluator`:
 ```python
 async def my_evaluator(sampling_client: SamplingClient) -> dict[str, float]:
     return {"accuracy": 0.85, "avg_length": 150}
+
 
 config = rl_train.Config(evaluator_builders=[my_evaluator], eval_every=20)
 ```
@@ -382,8 +396,10 @@ Built into `rl/train.py` via the test dataset from `RLDatasetBuilder.__call__()`
 from tinker_cookbook.eval.inspect_utils import InspectAPIFromTinkerSampling
 
 evaluator = InspectAPIFromTinkerSampling(
-    task="gsm8k", renderer_name=renderer_name,
-    model_name=model_name, include_reasoning=True,
+    task="gsm8k",
+    renderer_name=renderer_name,
+    model_name=model_name,
+    include_reasoning=True,
 )
 ```
 
@@ -397,7 +413,8 @@ See `tinker_cookbook/recipes/chat_sl/train.py` for a working example with GSM8K 
 async def eval_math(sampling_client: SamplingClient) -> dict[str, float]:
     async def evaluate_one(problem):
         response = await sampling_client.sample_async(
-            prompt=problem.prompt, num_samples=1,
+            prompt=problem.prompt,
+            num_samples=1,
             sampling_params=SamplingParams(max_tokens=256, temperature=0.0),
         )
         return parse_answer(response.sequences[0].tokens) == problem.expected
@@ -415,5 +432,6 @@ Compute NLL on a held-out dataset without generating text. See the built-in eval
 
 ```python
 from tinker_cookbook.utils.ml_log import log_metrics
+
 log_metrics({"train/loss": 0.5, "eval/accuracy": 0.85}, step=100)
 ```

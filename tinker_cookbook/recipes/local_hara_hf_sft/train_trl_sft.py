@@ -73,7 +73,10 @@ class LocalHFSFTConfig:
     eval_jsonl_path: str = ""
     output_dir: str = "./outputs/local_hf_sft"
     max_length: int = 2048
-    train_on_what: TrainOnWhat = TrainOnWhat.ALL_ASSISTANT_MESSAGES
+    # Offline renderer fallbacks (e.g. qwen3) do not satisfy the sequence
+    # extension property, so training only the final assistant message is the
+    # safe default for multi-turn data.
+    train_on_what: TrainOnWhat = TrainOnWhat.LAST_ASSISTANT_MESSAGE
     num_train_epochs: int = 1
     per_device_train_batch_size: int = 1
     gradient_accumulation_steps: int = 4
@@ -120,18 +123,29 @@ def conversations_to_hf_dataset(
             train_on_what=train_on_what,
         )
 
-        input_ids_T = datum.model_input.to_ints()
+        # A tinker Datum is already next-token shifted: its model_input holds
+        # tokens[:-1], its targets hold tokens[1:], and its weights are aligned
+        # with those targets. HF/TRL shifts labels once more internally, so we
+        # reconstruct the full token sequence and align labels token-for-token
+        # with it, so HF's internal shift scores input_ids[j + 1] from
+        # input_ids[j] exactly as the tinker weights intended.
+        shifted_input_ids_T = [int(token_id) for token_id in datum.model_input.to_ints()]
         weights_T = datum.loss_fn_inputs["weights"].to_numpy()
-        target_ids_T = datum.loss_fn_inputs["target_tokens"].to_numpy()
+        target_ids_T = [
+            int(token_id) for token_id in datum.loss_fn_inputs["target_tokens"].to_numpy()
+        ]
 
-        n = min(len(input_ids_T), len(weights_T), len(target_ids_T))
-        labels_T = [int(target_ids_T[i]) if weights_T[i] > 0.0 else IGNORE_INDEX for i in range(n)]
+        input_ids_T = [shifted_input_ids_T[0], *target_ids_T]
+        labels_T = [IGNORE_INDEX] + [
+            token_id if weight > 0.0 else IGNORE_INDEX
+            for token_id, weight in zip(target_ids_T, weights_T, strict=True)
+        ]
 
         rows.append(
             {
-                "input_ids": list(input_ids_T[:n]),
+                "input_ids": input_ids_T,
                 "labels": labels_T,
-                "attention_mask": [1] * n,
+                "attention_mask": [1] * len(input_ids_T),
             }
         )
 
